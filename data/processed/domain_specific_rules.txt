@@ -1,0 +1,48 @@
+Name: drug_target_interaction
+Type: domain_specific
+Domain: drug_target
+Body: [('drug', 'DRUG_TARGET', 'protein')]
+Head: ('protein', 'targeted_by', 'drug')
+Confidence: 0.9
+Description: Drugs target proteins
+----------------------------------------
+Name: drug_metabolism
+Type: domain_specific
+Domain: drug_metabolism
+Body: [('drug', 'METABOLIZED_BY', 'protein')]
+Head: ('protein', 'METABOLIZES', 'drug')
+Confidence: 0.85
+Description: Enzymes metabolize drugs
+----------------------------------------
+Name: protein_function_inference
+Type: domain_specific
+Domain: protein_function
+Body: [('protein', 'SEQUENCE_SIMILARITY', 'protein2'), ('protein2', 'HAS_FUNCTION', 'function')]
+Head: ('protein', 'HAS_FUNCTION', 'function')
+Confidence: 0.7
+Description: Proteins with similar sequences may share functions
+----------------------------------------
+Name: protein_complex_membership
+Type: domain_specific
+Domain: protein_complex
+Body: [('protein', 'MEMBER_OF_COMPLEX', 'complex')]
+Head: ('complex', 'HAS_MEMBER', 'protein')
+Confidence: 0.95
+Description: Complexes have protein members
+----------------------------------------
+Name: disease_symptom_overlap
+Type: domain_specific
+Domain: disease_similarity
+Body: [('disease', 'HAS_SYMPTOM', 'symptom'), ('symptom', 'OBSERVED_IN', 'disease2')]
+Head: ('disease', 'SIMILAR_TO', 'disease2')
+Confidence: 0.6
+Description: Diseases sharing symptoms may be similar
+----------------------------------------
+Name: pathway_crosstalk
+Type: domain_specific
+Domain: pathway_interaction
+Body: [('pathway', 'SHARES_PROTEIN', 'pathway2')]
+Head: ('pathway', 'CROSSTALK_WITH', 'pathway2')
+Confidence: 0.75
+Description: Pathways that share proteins may crosstalk
+----------------------------------------

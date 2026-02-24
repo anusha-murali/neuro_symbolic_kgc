@@ -1,0 +1,180 @@
+Name: ppi_symmetric
+Type: symmetric
+Rule: {'name': 'ppi_symmetric', 'type': 'symmetric', 'relation': 'PPI', 'body': [(None, 'PPI', None)], 'head': (None, 'PPI', None), 'confidence': 0.95, 'description': 'PPI is a symmetric relation'}
+Confidence: 0.95
+Description: PPI is a symmetric relation
+============================================================
+Name: drug_side_effect_via_protein
+Type: composition
+Rule: {'name': 'drug_side_effect_via_protein', 'body': [('drug', 'DRUG_TARGET', 'protein'), ('protein', 'PROTEIN_DISEASE_ASSOCIATION', 'disease')], 'head': ('drug', 'DRUG_SIDEEFFECT_ASSOCIATION', 'disease'), 'confidence': 0.7, 'description': 'Drug side effects can be mediated through protein targets', 'type': 'composition'}
+Confidence: 0.7
+Description: Drug side effects can be mediated through protein targets
+============================================================
+Name: drug_indication_via_pathway
+Type: composition
+Rule: {'name': 'drug_indication_via_pathway', 'body': [('drug', 'DRUG_TARGET', 'protein'), ('protein', 'PROTEIN_PATHWAY_ASSOCIATION', 'pathway'), ('pathway', 'DISEASE_PATHWAY_ASSOCIATION', 'disease')], 'head': ('drug', 'DRUG_INDICATION_ASSOCIATION', 'disease'), 'confidence': 0.65, 'description': 'Drug indications can be inferred through pathway involvement', 'type': 'composition'}
+Confidence: 0.65
+Description: Drug indications can be inferred through pathway involvement
+============================================================
+Name: protein_pathway_via_complex
+Type: composition
+Rule: {'name': 'protein_pathway_via_complex', 'body': [('protein', 'MEMBER_OF_COMPLEX', 'complex'), ('complex', 'COMPLEX_IN_PATHWAY', 'pathway')], 'head': ('protein', 'PROTEIN_PATHWAY_ASSOCIATION', 'pathway'), 'confidence': 0.75, 'description': 'Proteins in complexes participate in pathways', 'type': 'composition'}
+Confidence: 0.75
+Description: Proteins in complexes participate in pathways
+============================================================
+Name: pathway_grandparent
+Type: composition
+Rule: {'name': 'pathway_grandparent', 'body': [('pathway', 'HAS_PARENT_PATHWAY', 'pathway2'), ('pathway2', 'HAS_PARENT_PATHWAY', 'pathway3')], 'head': ('pathway', 'HAS_PARENT_PATHWAY', 'pathway3'), 'confidence': 0.9, 'description': 'Transitive hierarchy in pathways', 'type': 'composition'}
+Confidence: 0.9
+Description: Transitive hierarchy in pathways
+============================================================
+Name: protein_interaction_chain
+Type: composition
+Rule: {'name': 'protein_interaction_chain', 'body': [('protein', 'PPI', 'protein2'), ('protein2', 'PPI', 'protein3')], 'head': ('protein', 'PPI', 'protein3'), 'confidence': 0.6, 'description': 'Transitive protein-protein interactions (with lower confidence)', 'type': 'composition'}
+Confidence: 0.6
+Description: Transitive protein-protein interactions (with lower confidence)
+============================================================
+Name: disease_subclass_transitive
+Type: transitive
+Rule: {'name': 'disease_subclass_transitive', 'type': 'transitive', 'relation': 'DIRECT_PARENT', 'domain': 'disease', 'range': 'disease', 'confidence': 0.95, 'description': 'Disease hierarchy is transitive'}
+Confidence: 0.95
+Description: Disease hierarchy is transitive
+============================================================
+Name: pathway_subclass_transitive
+Type: transitive
+Rule: {'name': 'pathway_subclass_transitive', 'type': 'transitive', 'relation': 'HAS_PARENT_PATHWAY', 'domain': 'pathway', 'range': 'pathway', 'confidence': 0.95, 'description': 'Pathway hierarchy is transitive'}
+Confidence: 0.95
+Description: Pathway hierarchy is transitive
+============================================================
+Name: cell_type_hierarchy
+Type: transitive
+Rule: {'name': 'cell_type_hierarchy', 'type': 'transitive', 'relation': 'CELL_TYPE_PARENT', 'domain': 'cell', 'range': 'cell', 'confidence': 0.9, 'description': 'Cell type hierarchy is transitive'}
+Confidence: 0.9
+Description: Cell type hierarchy is transitive
+============================================================
+Name: disease_subclass_inheritance
+Type: hierarchical
+Rule: {'name': 'disease_subclass_inheritance', 'body': [('disease', 'DIRECT_PARENT', 'disease2')], 'head': ('disease', 'INHERITS_FROM', 'disease2'), 'type': 'hierarchical', 'confidence': 0.85, 'description': 'Diseases inherit properties from parent diseases'}
+Confidence: 0.85
+Description: Diseases inherit properties from parent diseases
+============================================================
+Name: drug_target_interaction
+Type: domain_specific
+Rule: {'name': 'drug_target_interaction', 'body': [('drug', 'DRUG_TARGET', 'protein')], 'head': ('protein', 'targeted_by', 'drug'), 'type': 'domain_specific', 'confidence': 0.9, 'domain': 'drug_target', 'description': 'Drugs target proteins'}
+Confidence: 0.9
+Description: Drugs target proteins
+============================================================
+Name: drug_metabolism
+Type: domain_specific
+Rule: {'name': 'drug_metabolism', 'body': [('drug', 'METABOLIZED_BY', 'protein')], 'head': ('protein', 'METABOLIZES', 'drug'), 'type': 'domain_specific', 'confidence': 0.85, 'domain': 'drug_metabolism', 'description': 'Enzymes metabolize drugs'}
+Confidence: 0.85
+Description: Enzymes metabolize drugs
+============================================================
+Name: protein_function_inference
+Type: domain_specific
+Rule: {'name': 'protein_function_inference', 'body': [('protein', 'SEQUENCE_SIMILARITY', 'protein2'), ('protein2', 'HAS_FUNCTION', 'function')], 'head': ('protein', 'HAS_FUNCTION', 'function'), 'type': 'domain_specific', 'confidence': 0.7, 'domain': 'protein_function', 'description': 'Proteins with similar sequences may share functions'}
+Confidence: 0.7
+Description: Proteins with similar sequences may share functions
+============================================================
+Name: protein_complex_membership
+Type: domain_specific
+Rule: {'name': 'protein_complex_membership', 'body': [('protein', 'MEMBER_OF_COMPLEX', 'complex')], 'head': ('complex', 'HAS_MEMBER', 'protein'), 'type': 'domain_specific', 'confidence': 0.95, 'domain': 'protein_complex', 'description': 'Complexes have protein members'}
+Confidence: 0.95
+Description: Complexes have protein members
+============================================================
+Name: disease_symptom_overlap
+Type: domain_specific
+Rule: {'name': 'disease_symptom_overlap', 'body': [('disease', 'HAS_SYMPTOM', 'symptom'), ('symptom', 'OBSERVED_IN', 'disease2')], 'head': ('disease', 'SIMILAR_TO', 'disease2'), 'type': 'domain_specific', 'confidence': 0.6, 'domain': 'disease_similarity', 'description': 'Diseases sharing symptoms may be similar'}
+Confidence: 0.6
+Description: Diseases sharing symptoms may be similar
+============================================================
+Name: pathway_crosstalk
+Type: domain_specific
+Rule: {'name': 'pathway_crosstalk', 'body': [('pathway', 'SHARES_PROTEIN', 'pathway2')], 'head': ('pathway', 'CROSSTALK_WITH', 'pathway2'), 'type': 'domain_specific', 'confidence': 0.75, 'domain': 'pathway_interaction', 'description': 'Pathways that share proteins may crosstalk'}
+Confidence: 0.75
+Description: Pathways that share proteins may crosstalk
+============================================================
+Name: pathway_component_inference
+Type: pathway
+Rule: {'name': 'pathway_component_inference', 'body': [('pathway', 'CONTAINS_REACTION', 'reaction'), ('reaction', 'INVOLVES_PROTEIN', 'protein')], 'head': ('pathway', 'INVOLVES_PROTEIN', 'protein'), 'type': 'pathway', 'confidence': 0.9, 'description': 'Pathways involve proteins through reactions'}
+Confidence: 0.9
+Description: Pathways involve proteins through reactions
+============================================================
+Name: pathway_regulation
+Type: pathway
+Rule: {'name': 'pathway_regulation', 'body': [('pathway', 'REGULATED_BY', 'protein')], 'head': ('protein', 'REGULATES_PATHWAY', 'pathway'), 'type': 'pathway', 'confidence': 0.85, 'description': 'Proteins regulate pathways'}
+Confidence: 0.85
+Description: Proteins regulate pathways
+============================================================
+Name: pathway_hierarchy_inference
+Type: pathway
+Rule: {'name': 'pathway_hierarchy_inference', 'body': [('pathway', 'HAS_SUBPATHWAY', 'pathway2'), ('pathway2', 'INVOLVES_PROTEIN', 'protein')], 'head': ('pathway', 'INVOLVES_PROTEIN', 'protein'), 'type': 'pathway', 'confidence': 0.8, 'description': 'Proteins in subpathways are involved in parent pathways'}
+Confidence: 0.8
+Description: Proteins in subpathways are involved in parent pathways
+============================================================
+Name: disease_genetic_basis
+Type: disease
+Rule: {'name': 'disease_genetic_basis', 'body': [('disease', 'ASSOCIATED_WITH_GENE', 'gene'), ('gene', 'MUTATED_IN', 'disease')], 'head': ('disease', 'HAS_GENETIC_BASIS', 'gene'), 'type': 'disease', 'confidence': 0.9, 'description': 'Diseases have genetic basis through associated genes'}
+Confidence: 0.9
+Description: Diseases have genetic basis through associated genes
+============================================================
+Name: disease_phenotype_similarity
+Type: disease
+Rule: {'name': 'disease_phenotype_similarity', 'body': [('disease', 'HAS_PHENOTYPE', 'phenotype'), ('phenotype', 'OBSERVED_IN', 'disease2')], 'head': ('disease', 'PHENOTYPICALLY_SIMILAR', 'disease2'), 'type': 'disease', 'confidence': 0.8, 'description': 'Diseases sharing phenotypes are phenotypically similar'}
+Confidence: 0.8
+Description: Diseases sharing phenotypes are phenotypically similar
+============================================================
+Name: disease_comorbidity
+Type: disease
+Rule: {'name': 'disease_comorbidity', 'body': [('disease', 'SHARES_PATHWAY', 'disease2')], 'head': ('disease', 'COMORBID_WITH', 'disease2'), 'type': 'disease', 'confidence': 0.7, 'description': 'Diseases sharing pathways may be comorbid'}
+Confidence: 0.7
+Description: Diseases sharing pathways may be comorbid
+============================================================
+Name: drug_similarity_structure
+Type: drug
+Rule: {'name': 'drug_similarity_structure', 'body': [('drug', 'CHEMICAL_SIMILARITY', 'drug2')], 'head': ('drug', 'STRUCTURALLY_SIMILAR', 'drug2'), 'type': 'drug', 'confidence': 0.9, 'description': 'Drugs with chemical similarity are structurally similar'}
+Confidence: 0.9
+Description: Drugs with chemical similarity are structurally similar
+============================================================
+Name: drug_similarity_target
+Type: drug
+Rule: {'name': 'drug_similarity_target', 'body': [('drug', 'SHARES_TARGET', 'drug2')], 'head': ('drug', 'TARGET_SIMILAR', 'drug2'), 'type': 'drug', 'confidence': 0.85, 'description': 'Drugs sharing targets are target-similar'}
+Confidence: 0.85
+Description: Drugs sharing targets are target-similar
+============================================================
+Name: drug_side_effect_similarity
+Type: drug
+Rule: {'name': 'drug_side_effect_similarity', 'body': [('drug', 'SHARES_SIDE_EFFECT', 'drug2')], 'head': ('drug', 'SIDE_EFFECT_SIMILAR', 'drug2'), 'type': 'drug', 'confidence': 0.8, 'description': 'Drugs sharing side effects are side-effect-similar'}
+Confidence: 0.8
+Description: Drugs sharing side effects are side-effect-similar
+============================================================
+Name: drug_repurposing_candidate
+Type: drug
+Rule: {'name': 'drug_repurposing_candidate', 'body': [('drug', 'TARGETS_PROTEIN', 'protein'), ('protein', 'ASSOCIATED_WITH_DISEASE', 'disease')], 'head': ('drug', 'POTENTIAL_TREATMENT_FOR', 'disease'), 'type': 'drug', 'confidence': 0.6, 'description': 'Drugs may be repurposed for diseases through shared targets'}
+Confidence: 0.6
+Description: Drugs may be repurposed for diseases through shared targets
+============================================================
+Name: protein_interaction_network
+Type: protein
+Rule: {'name': 'protein_interaction_network', 'body': [('protein', 'INTERACTS_WITH', 'protein2')], 'head': ('protein2', 'INTERACTS_WITH', 'protein'), 'type': 'protein', 'confidence': 0.95, 'description': 'Protein interactions are bidirectional'}
+Confidence: 0.95
+Description: Protein interactions are bidirectional
+============================================================
+Name: protein_family_membership
+Type: protein
+Rule: {'name': 'protein_family_membership', 'body': [('protein', 'BELONGS_TO_FAMILY', 'family'), ('family', 'HAS_MEMBER', 'protein2')], 'head': ('protein', 'SIMILAR_TO', 'protein2'), 'type': 'protein', 'confidence': 0.85, 'description': 'Proteins in same family are similar'}
+Confidence: 0.85
+Description: Proteins in same family are similar
+============================================================
+Name: protein_functional_association
+Type: protein
+Rule: {'name': 'protein_functional_association', 'body': [('protein', 'CO_EXPRESSED_WITH', 'protein2')], 'head': ('protein', 'FUNCTIONALLY_ASSOCIATED', 'protein2'), 'type': 'protein', 'confidence': 0.75, 'description': 'Co-expressed proteins may be functionally associated'}
+Confidence: 0.75
+Description: Co-expressed proteins may be functionally associated
+============================================================
+Name: protein_pathway_involvement
+Type: protein
+Rule: {'name': 'protein_pathway_involvement', 'body': [('protein', 'PARTICIPATES_IN', 'pathway')], 'head': ('pathway', 'HAS_PARTICIPANT', 'protein'), 'type': 'protein', 'confidence': 0.9, 'description': 'Proteins participate in pathways'}
+Confidence: 0.9
+Description: Proteins participate in pathways
+============================================================

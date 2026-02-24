@@ -1,0 +1,41 @@
+model:
+  name: "NeuroSymbolicKGC"
+  embedding_dim: 200
+  lambda_logic: 0.2  # Very small rule influence initially
+  temperature: 1.0
+  margin: 2.0  # Margin for loss
+
+training:
+  batch_size: 1024  # Smaller batch for stability
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  n_epochs: 300  # More epochs
+  n_negatives: 32  # More negatives
+  eval_every: 5
+  mixed_precision: true
+  num_workers: 0
+  patience: 20  # More patience
+  warmup_epochs: 5  # Longer warmup
+  max_val_batches: 50
+  use_type_constraint: true
+  label_smoothing: 0.1  # Add label smoothing
+
+symbolic:
+  min_support: 10  
+  min_confidence: 0.8  # Very low confidence
+  rule_types: ["inverse", "symmetric", "chain", "composition", "transitive", 
+               "domain_specific", "pathway", "disease", "drug", "protein",
+               "ppi", "dpi", "go", "complex", "tissue"]
+  max_rules: 1000  # Much higher
+  mine_rules: true
+  chain_max_length: 2
+
+validation:
+  fast_mode: false
+  sampling:
+    num_samples: 1000  
+    correction: true
+
+logging:
+  log_interval: 100
+  save_interval: 10

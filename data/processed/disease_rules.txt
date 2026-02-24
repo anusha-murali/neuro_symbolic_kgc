@@ -1,0 +1,21 @@
+Name: disease_genetic_basis
+Type: disease
+Body: [('disease', 'ASSOCIATED_WITH_GENE', 'gene'), ('gene', 'MUTATED_IN', 'disease')]
+Head: ('disease', 'HAS_GENETIC_BASIS', 'gene')
+Confidence: 0.9
+Description: Diseases have genetic basis through associated genes
+----------------------------------------
+Name: disease_phenotype_similarity
+Type: disease
+Body: [('disease', 'HAS_PHENOTYPE', 'phenotype'), ('phenotype', 'OBSERVED_IN', 'disease2')]
+Head: ('disease', 'PHENOTYPICALLY_SIMILAR', 'disease2')
+Confidence: 0.8
+Description: Diseases sharing phenotypes are phenotypically similar
+----------------------------------------
+Name: disease_comorbidity
+Type: disease
+Body: [('disease', 'SHARES_PATHWAY', 'disease2')]
+Head: ('disease', 'COMORBID_WITH', 'disease2')
+Confidence: 0.7
+Description: Diseases sharing pathways may be comorbid
+----------------------------------------

@@ -1,0 +1,17 @@
+# Make script executable
+chmod +x scripts/run_experiments.sh
+
+# Run all experiments
+./scripts/run_experiments.sh
+
+# Run with specific GPU and parallel jobs
+./scripts/run_experiments.sh --gpu 1 --jobs 2
+
+# Dry run (print commands without executing)
+./scripts/run_experiments.sh --dry-run
+
+# Custom experiment name
+./scripts/run_experiments.sh --name my_sweep
+
+# Custom data directory
+./scripts/run_experiments.sh --data-dir /path/to/data

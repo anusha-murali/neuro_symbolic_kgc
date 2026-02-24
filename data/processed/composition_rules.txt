@@ -1,0 +1,35 @@
+Name: drug_side_effect_via_protein
+Type: composition
+Body: [('drug', 'DRUG_TARGET', 'protein'), ('protein', 'PROTEIN_DISEASE_ASSOCIATION', 'disease')]
+Head: ('drug', 'DRUG_SIDEEFFECT_ASSOCIATION', 'disease')
+Confidence: 0.7
+Description: Drug side effects can be mediated through protein targets
+----------------------------------------
+Name: drug_indication_via_pathway
+Type: composition
+Body: [('drug', 'DRUG_TARGET', 'protein'), ('protein', 'PROTEIN_PATHWAY_ASSOCIATION', 'pathway'), ('pathway', 'DISEASE_PATHWAY_ASSOCIATION', 'disease')]
+Head: ('drug', 'DRUG_INDICATION_ASSOCIATION', 'disease')
+Confidence: 0.65
+Description: Drug indications can be inferred through pathway involvement
+----------------------------------------
+Name: protein_pathway_via_complex
+Type: composition
+Body: [('protein', 'MEMBER_OF_COMPLEX', 'complex'), ('complex', 'COMPLEX_IN_PATHWAY', 'pathway')]
+Head: ('protein', 'PROTEIN_PATHWAY_ASSOCIATION', 'pathway')
+Confidence: 0.75
+Description: Proteins in complexes participate in pathways
+----------------------------------------
+Name: pathway_grandparent
+Type: composition
+Body: [('pathway', 'HAS_PARENT_PATHWAY', 'pathway2'), ('pathway2', 'HAS_PARENT_PATHWAY', 'pathway3')]
+Head: ('pathway', 'HAS_PARENT_PATHWAY', 'pathway3')
+Confidence: 0.9
+Description: Transitive hierarchy in pathways
+----------------------------------------
+Name: protein_interaction_chain
+Type: composition
+Body: [('protein', 'PPI', 'protein2'), ('protein2', 'PPI', 'protein3')]
+Head: ('protein', 'PPI', 'protein3')
+Confidence: 0.6
+Description: Transitive protein-protein interactions (with lower confidence)
+----------------------------------------

@@ -1,0 +1,24 @@
+Name: disease_subclass_transitive
+Type: transitive
+Rule: {'name': 'disease_subclass_transitive', 'type': 'transitive', 'relation': 'DIRECT_PARENT', 'domain': 'disease', 'range': 'disease', 'confidence': 0.95, 'description': 'Disease hierarchy is transitive'}
+Confidence: 0.95
+Description: Disease hierarchy is transitive
+----------------------------------------
+Name: pathway_subclass_transitive
+Type: transitive
+Rule: {'name': 'pathway_subclass_transitive', 'type': 'transitive', 'relation': 'HAS_PARENT_PATHWAY', 'domain': 'pathway', 'range': 'pathway', 'confidence': 0.95, 'description': 'Pathway hierarchy is transitive'}
+Confidence: 0.95
+Description: Pathway hierarchy is transitive
+----------------------------------------
+Name: cell_type_hierarchy
+Type: transitive
+Rule: {'name': 'cell_type_hierarchy', 'type': 'transitive', 'relation': 'CELL_TYPE_PARENT', 'domain': 'cell', 'range': 'cell', 'confidence': 0.9, 'description': 'Cell type hierarchy is transitive'}
+Confidence: 0.9
+Description: Cell type hierarchy is transitive
+----------------------------------------
+Name: disease_subclass_inheritance
+Type: hierarchical
+Rule: {'name': 'disease_subclass_inheritance', 'body': [('disease', 'DIRECT_PARENT', 'disease2')], 'head': ('disease', 'INHERITS_FROM', 'disease2'), 'type': 'hierarchical', 'confidence': 0.85, 'description': 'Diseases inherit properties from parent diseases'}
+Confidence: 0.85
+Description: Diseases inherit properties from parent diseases
+----------------------------------------

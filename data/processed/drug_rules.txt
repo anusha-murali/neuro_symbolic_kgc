@@ -1,0 +1,28 @@
+Name: drug_similarity_structure
+Type: drug
+Body: [('drug', 'CHEMICAL_SIMILARITY', 'drug2')]
+Head: ('drug', 'STRUCTURALLY_SIMILAR', 'drug2')
+Confidence: 0.9
+Description: Drugs with chemical similarity are structurally similar
+----------------------------------------
+Name: drug_similarity_target
+Type: drug
+Body: [('drug', 'SHARES_TARGET', 'drug2')]
+Head: ('drug', 'TARGET_SIMILAR', 'drug2')
+Confidence: 0.85
+Description: Drugs sharing targets are target-similar
+----------------------------------------
+Name: drug_side_effect_similarity
+Type: drug
+Body: [('drug', 'SHARES_SIDE_EFFECT', 'drug2')]
+Head: ('drug', 'SIDE_EFFECT_SIMILAR', 'drug2')
+Confidence: 0.8
+Description: Drugs sharing side effects are side-effect-similar
+----------------------------------------
+Name: drug_repurposing_candidate
+Type: drug
+Body: [('drug', 'TARGETS_PROTEIN', 'protein'), ('protein', 'ASSOCIATED_WITH_DISEASE', 'disease')]
+Head: ('drug', 'POTENTIAL_TREATMENT_FOR', 'disease')
+Confidence: 0.6
+Description: Drugs may be repurposed for diseases through shared targets
+----------------------------------------

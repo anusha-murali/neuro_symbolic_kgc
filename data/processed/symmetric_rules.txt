@@ -1,0 +1,6 @@
+Name: ppi_symmetric
+Type: symmetric
+Relation: PPI
+Confidence: 0.95
+Description: PPI is a symmetric relation
+----------------------------------------

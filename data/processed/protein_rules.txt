@@ -1,0 +1,28 @@
+Name: protein_interaction_network
+Type: protein
+Body: [('protein', 'INTERACTS_WITH', 'protein2')]
+Head: ('protein2', 'INTERACTS_WITH', 'protein')
+Confidence: 0.95
+Description: Protein interactions are bidirectional
+----------------------------------------
+Name: protein_family_membership
+Type: protein
+Body: [('protein', 'BELONGS_TO_FAMILY', 'family'), ('family', 'HAS_MEMBER', 'protein2')]
+Head: ('protein', 'SIMILAR_TO', 'protein2')
+Confidence: 0.85
+Description: Proteins in same family are similar
+----------------------------------------
+Name: protein_functional_association
+Type: protein
+Body: [('protein', 'CO_EXPRESSED_WITH', 'protein2')]
+Head: ('protein', 'FUNCTIONALLY_ASSOCIATED', 'protein2')
+Confidence: 0.75
+Description: Co-expressed proteins may be functionally associated
+----------------------------------------
+Name: protein_pathway_involvement
+Type: protein
+Body: [('protein', 'PARTICIPATES_IN', 'pathway')]
+Head: ('pathway', 'HAS_PARTICIPANT', 'protein')
+Confidence: 0.9
+Description: Proteins participate in pathways
+----------------------------------------

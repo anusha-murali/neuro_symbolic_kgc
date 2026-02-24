@@ -1,0 +1,11 @@
+# Run all tests
+python -m unittest tests/test_model.py -v
+
+# Run specific test class
+python -m unittest tests.test_model.TestComplEx -v
+
+# Run with coverage
+pytest tests/test_model.py --cov=src.models --cov-report=term
+
+# Run in verbose mode
+python -m unittest tests/test_model.py -v

@@ -1,0 +1,21 @@
+Name: pathway_component_inference
+Type: pathway
+Body: [('pathway', 'CONTAINS_REACTION', 'reaction'), ('reaction', 'INVOLVES_PROTEIN', 'protein')]
+Head: ('pathway', 'INVOLVES_PROTEIN', 'protein')
+Confidence: 0.9
+Description: Pathways involve proteins through reactions
+----------------------------------------
+Name: pathway_regulation
+Type: pathway
+Body: [('pathway', 'REGULATED_BY', 'protein')]
+Head: ('protein', 'REGULATES_PATHWAY', 'pathway')
+Confidence: 0.85
+Description: Proteins regulate pathways
+----------------------------------------
+Name: pathway_hierarchy_inference
+Type: pathway
+Body: [('pathway', 'HAS_SUBPATHWAY', 'pathway2'), ('pathway2', 'INVOLVES_PROTEIN', 'protein')]
+Head: ('pathway', 'INVOLVES_PROTEIN', 'protein')
+Confidence: 0.8
+Description: Proteins in subpathways are involved in parent pathways
+----------------------------------------
