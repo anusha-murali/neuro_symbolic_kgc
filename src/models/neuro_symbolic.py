@@ -3,7 +3,7 @@ models/neuro_symbolic.py
 
 This module implements a neuro-symbolic knowledge graph completion model:
 - Neural component: ComplEx (complex embeddings) for learning latent patterns
-- Symbolic component: Currently placeholder, rules handled externally via augment_data.py
+- Symbolic component: Rules handled externally via augment_data.py
 - Includes evaluation with filtered metrics and self-adversarial loss
 """
 
