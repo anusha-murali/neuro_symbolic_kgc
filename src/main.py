@@ -279,7 +279,9 @@ def main():
     model = NeuroSymbolicKGC(
         n_entities=train_dataset.n_entities,
         n_relations=train_dataset.n_relations,
-        embedding_dim=config['model']['embedding_dim']
+        embedding_dim=config['model']['embedding_dim'],
+        lambda_logic=config['model'].get('lambda_logic', 0.1),
+        temperature=config['model'].get('temperature', 1.0)
     ).to(device)
     
     print(f"\nModel parameters: {sum(p.numel() for p in model.parameters()):,}")
