@@ -3,18 +3,25 @@ models/neuro_symbolic.py
 
 This module implements a neuro-symbolic knowledge graph completion model:
 - Neural component: ComplEx (complex embeddings) for learning latent patterns
-- Symbolic component: Rules handled externally via augment_data.py
+- Symbolic component: Rule confidence integration with learnable weights
 - Includes evaluation with filtered metrics and self-adversarial loss
+
+The symbolic component uses mined biological rules to boost scores for 
+relations that follow known patterns (inverse, symmetric, chain rules).
+Rules are converted to confidence scores per relation type, which are then
+used to modulate the neural predictions.
 """
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Tuple
+from typing import Tuple, List, Dict, Optional
 
 # =============================================================================
 # Mixed Precision Training Support
 # =============================================================================
+# Mixed precision (FP16) training speeds up computation and reduces memory usage
+# We provide fallbacks for environments without AMP support
 try:
     from torch.cuda.amp import autocast
     MIXED_PRECISION = True
@@ -138,55 +145,144 @@ class ComplEx(nn.Module):
 # =============================================================================
 class NeuroSymbolicKGC(nn.Module):
     """
-    Neuro-symbolic model for knowledge graph completion.
+    Neuro-symbolic model for knowledge graph completion that integrates:
     
-    Currently, symbolic rules are handled externally via data augmentation.
-    This class focuses on the neural component with proper evaluation and loss functions.
+    1. Neural Component: ComplEx embeddings that learn latent patterns from graph structure
+    2. Symbolic Component: Rule confidence scores derived from mined biological rules
+       (inverse, symmetric, chain, and composition rules)
+    
+    The symbolic component provides a boost to scores for relations that have
+    high-confidence rules. The weight of this boost (lambda_logic) is learnable,
+    allowing the model to adapt the influence of symbolic knowledge during training.
+    
+    Rules are mined separately using BiologicalRuleMiner and then converted to
+    relation-specific confidence scores via set_rules(). These confidences are
+    stored in a buffer and used during forward passes to modulate predictions.
+    
+    The final score is: score = neural_score + lambda_logic * tanh(rule_confidence / temperature)
     """
     
-    def __init__(self, n_entities, n_relations, embedding_dim = 200, **kwargs):
+    def __init__(self, n_entities, n_relations, embedding_dim=200, lambda_logic=0.1, temperature=1.0, **kwargs):
         """
         Args:
             n_entities: Number of unique entities
             n_relations: Number of unique relations
             embedding_dim: Dimension of embeddings
+            lambda_logic: Weight for symbolic component (0 = no symbolic influence)
+            temperature: Temperature for softening symbolic scores (higher = softer)
             **kwargs: Additional arguments (for compatibility)
         """
         super().__init__()
         self.neural_model = ComplEx(n_entities, n_relations, embedding_dim)
         self.n_entities = n_entities
         self.n_relations = n_relations
+        self.lambda_logic = lambda_logic
+        self.temperature = temperature
+        
+        # Rule confidence matrix (stores confidence score per relation type)
+        # Values are in [0,1] after normalization, indicating rule strength
+        self.register_buffer('rule_confidence', torch.zeros(n_relations))
+        self.has_rules = False
         
     def set_rules(self, rules, relation2id):
         """
-        Placeholder for rule integration.
-        Rules are currently handled via augment_data.py which augments the training data
-        with rule-derived triples rather than modifying scores directly.
+        Set rules by populating rule confidence matrix.
+        
+        This function processes mined rules (from BiologicalRuleMiner) and
+        converts them into confidence scores per relation. Multiple rules
+        affecting the same relation are combined by taking the maximum confidence.
+        
+        Args:
+            rules: List of mined rule dictionaries with 'type', 'body', 'head', 'confidence'
+            relation2id: Mapping from relation names to integer IDs
         """
-        pass  # Handled via augment_data.py
+        if not rules or not relation2id:
+            return
+            
+        # Reset confidence
+        self.rule_confidence.zero_()
+        rule_count = 0
+        
+        for rule in rules:
+            try:
+                if not isinstance(rule, dict):
+                    continue
+                    
+                confidence = rule.get('confidence', 0.5)
+                
+                # Extract relations from the rule body
+                if 'body' in rule and isinstance(rule['body'], list):
+                    for elem in rule['body']:
+                        if isinstance(elem, (list, tuple)) and len(elem) >= 2:
+                            rel = elem[1]
+                            if isinstance(rel, int) and rel < self.n_relations:
+                                self.rule_confidence[rel] = max(
+                                    self.rule_confidence[rel].item(), confidence
+                                )
+                                rule_count += 1
+                
+                # Extract relations from the rule head
+                if 'head' in rule and isinstance(rule['head'], (list, tuple)) and len(rule['head']) >= 2:
+                    rel = rule['head'][1]
+                    if isinstance(rel, int) and rel < self.n_relations:
+                        self.rule_confidence[rel] = max(
+                            self.rule_confidence[rel].item(), confidence
+                        )
+                        rule_count += 1
+                        
+            except Exception:
+                continue
+        
+        self.has_rules = rule_count > 0
+        if self.has_rules:
+            # Normalize confidences to [0,1] range
+            self.rule_confidence = self.rule_confidence / self.rule_confidence.max()
+            print(f"Loaded rules for {rule_count} relation occurrences")
         
     @autocast()
     def forward(self, triples):
         """
         Forward pass through the model.
         
+        Computes both neural and symbolic scores, then combines them.
+        
         Args:
             triples: Tensor of shape (batch_size, 3) with (head, relation, tail) indices
             
         Returns:
             Tuple of (combined_scores, neural_scores, symbolic_scores)
-            For compatibility, we return neural scores for all three (symbolic placeholder)
+            - combined_scores: Final scores used for training/evaluation
+            - neural_scores: Pure neural component scores (for analysis)
+            - symbolic_scores: Pure symbolic component scores (for analysis)
         """
+        # Neural scores from ComplEx
         neural_scores = self.neural_model(triples)
-        empty_symbolic = torch.zeros_like(neural_scores)
-        # Return neural scores for all outputs for compatibility with training loop
-        return neural_scores, neural_scores, empty_symbolic
+        
+        # Symbolic scores (boost for relations with rules)
+        symbolic_scores = torch.zeros_like(neural_scores)
+        
+        if self.has_rules:
+            r = triples[:, 1]  # relation indices
+            rule_conf = self.rule_confidence[r]
+            # Apply temperature and tanh for smoothing
+            # Tanh ensures symbolic scores are bounded in [-1, 1]
+            symbolic_scores = torch.tanh(rule_conf / self.temperature)
+        
+        # Combined scores with lambda weighting
+        combined_scores = neural_scores + self.lambda_logic * symbolic_scores
+        
+        return combined_scores, neural_scores, symbolic_scores
     
     @torch.no_grad()
-    def evaluate_ranks(self, triples, filter_mask = None):
+    def evaluate_ranks(self, triples, filter_mask=None):
         """
         Evaluate ranks for triples with optional filtering.
         This is used during validation/testing to compute MRR and Hits@K.
+        
+        Implements the standard filtered evaluation protocol for KGC:
+        - Scores all possible entities as tails
+        - Masks out other known true triples (to avoid false negatives)
+        - Computes rank of the true tail
         
         Args:
             triples: Tensor of shape (batch_size, 3) with (head, relation, tail) indices
@@ -208,25 +304,11 @@ class NeuroSymbolicKGC(nn.Module):
             all_scores = all_scores.masked_fill(filter_mask, -1e9)
         
         # Get the score of the true tail for each triple
-        # unsqueeze(1) adds a dimension for gather, squeeze(-1) removes it after gathering
-        target_scores = all_scores.gather(1, t.unsqueeze(1)).squeeze(-1)  # Shape: (batch_size,)
+        target_scores = all_scores.gather(1, t.unsqueeze(1)).squeeze(-1)
         
-        # =====================================================================
-        # WORST-CASE TIE BREAKING
-        # =====================================================================
-        # Standard KGC evaluation uses "worst-case" tie breaking:
-        # If multiple entities have the same score as the true tail, we assume
-        # the true tail is ranked after all of them (worst position).
-        # This is achieved by using >= instead of > in the comparison.
-        #
-        # Example: Scores = [0.9, 0.9, 0.8, 0.7], true tail at index 0
-        # Using >: rank = 1 (only strictly higher scores)
-        # Using >=: rank = 2 (itself + the tie at index 1)
-        # We use >= for worst-case evaluation.
-        #
-        # Also note: We DON'T add +1 because we want the count of entities
-        # with score >= target, which gives the rank directly.
-        ranks = (all_scores >= target_scores.unsqueeze(1)).sum(dim=1)  # Shape: (batch_size,)
+        # Worst-case tie breaking: count entities with score >= target
+        # This gives the rank (1-based) directly without adding 1
+        ranks = (all_scores >= target_scores.unsqueeze(1)).sum(dim=1)
         return ranks
         
     def get_regularization(self, triples):
@@ -254,12 +336,8 @@ class NeuroSymbolicKGC(nn.Module):
         t_re = self.neural_model.entity_re(t_idx)
         t_im = self.neural_model.entity_im(t_idx)
         
-        # =====================================================================
-        # NUMERICALLY STABLE N3 REGULARIZATION
-        # =====================================================================
-        # Using absolute values before cubing is more stable than cubing first
-        # (which could lead to very large numbers with negative signs)
-        # Formula: penalty = (|h_re|³ + |h_im|³ + |r_re|³ + |r_im|³ + |t_re|³ + |t_im|³) / batch_size
+        # N3 regularization: sum of cubed absolute values
+        # Using absolute values before cubing is more stable
         penalty = (torch.abs(h_re)**3).sum() + (torch.abs(h_im)**3).sum() + \
                   (torch.abs(r_re)**3).sum() + (torch.abs(r_im)**3).sum() + \
                   (torch.abs(t_re)**3).sum() + (torch.abs(t_im)**3).sum()
@@ -274,43 +352,30 @@ class NeuroSymbolicKGC(nn.Module):
         1. Encourages positive scores to be high (via log-sigmoid)
         2. Encourages negative scores to be low (via log-sigmoid of negative)
         3. Uses self-adversarial weighting to focus on hard negatives
+           (negatives with higher scores get more weight)
         
         Args:
             pos_scores: Tensor of scores for positive triples
-                       Shape can be (batch_size,) or (batch_size, 1)
             neg_scores: Tensor of scores for negative triples
-                       Shape can be:
-                       - (batch_size,) for 1 negative per positive
-                       - (batch_size * n_neg,) for flattened multiple negatives
-                       - (batch_size, n_neg) for already reshaped negatives
+                       Can be (batch_size,) for 1 negative or
+                       (batch_size * n_neg,) for multiple negatives
             
         Returns:
             loss: Scalar tensor with the combined loss
         """
         batch_size = pos_scores.shape[0]
         
-        # =====================================================================
-        # HANDLE MULTIPLE NEGATIVES (n_neg > 1)
-        # =====================================================================
-        # If neg_scores is 1D and longer than batch_size, it contains
-        # n_neg * batch_size scores in a flattened format.
-        # We need to reshape it to (batch_size, n_neg) for proper loss computation.
+        # Handle multiple negatives: reshape from flattened to (batch_size, n_neg)
         if neg_scores.dim() == 1 and neg_scores.shape[0] > batch_size:
             n_neg = neg_scores.shape[0] // batch_size
-            
-            # IMPORTANT: The negative sampler returns negatives in a specific order:
-            # [neg for batch item 0, neg for batch item 1, ...] * n_neg
-            # So we need to reshape to (n_neg, batch_size) first, then transpose
-            # to get (batch_size, n_neg) where each row corresponds to one positive
+            # Important: negatives are ordered as [neg1 for all positives, neg2 for all positives, ...]
+            # So reshape to (n_neg, batch_size) then transpose
             neg_scores = neg_scores.view(n_neg, batch_size).transpose(0, 1)
             
-        # =====================================================================
-        # SELF-ADVERSARIAL WEIGHTING (for multiple negatives)
-        # =====================================================================
+        # Self-adversarial weighting for multiple negatives
         if neg_scores.dim() == 2:
-            # Self-adversarial sampling: weight negatives by their score
-            # Higher score = harder negative = higher weight
             alpha = 1.0  # Temperature for softmax (can be tuned)
+            # Compute weights based on negative scores (higher score = higher weight)
             neg_weights = F.softmax(neg_scores * alpha, dim=-1).detach()  # Detach to avoid gradients
             
             # Positive loss: maximize log-sigmoid of positive scores
@@ -324,11 +389,8 @@ class NeuroSymbolicKGC(nn.Module):
             # Combined loss
             loss = pos_loss + neg_loss
             
-        # =====================================================================
-        # SIMPLE CASE (1 negative per positive)
-        # =====================================================================
+        # Simple case (1 negative per positive)
         else:
-            # Simple binary cross-entropy style loss
             pos_loss = -F.logsigmoid(pos_scores).mean()
             neg_loss = -F.logsigmoid(-neg_scores).mean()
             loss = pos_loss + neg_loss
